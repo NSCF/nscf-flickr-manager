@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "A set of Node scritps for managing files uploaded to the NSCF page on Flickr",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/NSCF/nscf-flickr-manager/issues"
   },
-  "homepage": "https://github.com/NSCF/nscf-flickr-manager#readme"
+  "homepage": "https://github.com/NSCF/nscf-flickr-manager#readme",
+  "dependencies": {
+    "firebase-admin": "^11.0.1"
+  }
 }
