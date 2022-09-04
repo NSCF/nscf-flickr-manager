@@ -3,3 +3,5 @@ node_modules
 firebasekey.js
 scratchpad.js
 *.pem
+*.json
+*.csv
