@@ -1,28 +1,17 @@
 import fs from 'fs'
 import https from 'https'
-import { EOL } from 'os'
 import express from 'express'
 const app = express()
 const port = 3000
 
 app.get('/*', (req, res) => {
   if (req.query.oauth_token && req.query.oauth_verifier) {
-    const file = fs.readFileSync('.env')
-    const text = file.toString()
 
-    //we only update the verifier, we should already have the token from earlier
     const oauth_verifier = req.query.oauth_verifier
-    const verifier_re = new RegExp('FLICKR_OAUTH_VERIFIER=.*(' + EOL + ')?')
-    let newText = text.replace(verifier_re, 'FLICKR_OAUTH_VERIFIER=' + oauth_verifier + EOL)
-
-    const eol_re = new RegExp(EOL + '$')
-    newText = newText.replace(eol_re, '')
-
-    fs.writeFileSync('.env', newText)
 
     res.end('authentication updated')
     if (process.send) {
-      process.send('done')
+      process.send(oauth_verifier)
       process.exit() //shut down the server
     }
   }

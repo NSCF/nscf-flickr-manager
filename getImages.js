@@ -1,3 +1,8 @@
+import fs from 'fs'
+import * as dotenv from 'dotenv'
+
+dotenv.config()
+
 flickr.photos.search({
   user_id
 }).then(response => {
