@@ -1,10 +1,9 @@
 //gets an inventory of images from flickr and 
-import fs from 'fs'
 import flickr from './flickrClient.js'
-import getPhotoset from './getPhotosetID.js'
+import getPhotoset from './getPhotoset.js'
 
 
-const getInventoryFromFlickr = async (albumTitle, writeToFile = false) => {
+const getInventoryFromFlickr = async (albumTitle) => {
 
   let photoset_id
   try {

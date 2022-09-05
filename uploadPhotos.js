@@ -5,8 +5,10 @@ import path from 'path'
 import { EOL } from 'os';
 import exiftool from 'node-exiftool'
 import uploadPhoto from "./__uploadPhoto.js";
-import getPhotoset from './getPhotosetID.js';
+import getPhotoset from './getPhotoset.js';
 import getInventoryFromFlickr from './getAlbumInventory.js';
+
+//SETTINGS
 
 const filePath = String.raw`C:\temp\Herbarium mass digitization project\ImageTaggingExperiments\JPEG`
 const filetype = '.jpg'
@@ -166,7 +168,8 @@ if(process.stdout.clearLine) {
 }
 
 if (uploadErrors.length > 0) {
-  console.log('There were errors uploading the following files. Please check them on Flickr as they may have uploaded but might not have the right permissions or be included in the right album:')
+  console.log('There were errors uploading the following files. Please check them on Flickr as they may have uploaded but might not have the right permissions or be included in the right album.')
+  console.log('They can be updated automatically if they have appropriate tags using updateImagesNotInAlbum.js')
   console.log(uploadErrors.join('|'))
 }
 
