@@ -12,7 +12,25 @@ const auth = Flickr.OAuth.createPlugin(
 )
 
 const uploadPhoto = async (file, photoset_id, is_public, license_id = 4) => { //license id 4 is CC BY 
-  const upload = new Flickr.Upload(auth, file)
+
+  let is_friend, is_family
+  if(is_public) {
+    is_public = 1
+    is_friend = 0
+    is_family = 0
+  }
+  else {
+    is_public = 0
+    is_friend = 1
+    is_family = 0
+  }
+
+  const upload = new Flickr.Upload(auth, file, {
+    is_public,
+    is_friend,
+    is_family,
+  })
+  
   let photo_id
   try {
     const response = await upload
@@ -24,13 +42,6 @@ const uploadPhoto = async (file, photoset_id, is_public, license_id = 4) => { //
       result: 'error',
       error: err
     }
-  }
-
-  if(is_public) {
-    await flickr.photos.setPerms({photo_id,  is_public: 1, is_friend: 0, is_family: 0 })
-  }
-  else {
-    await flickr.photos.setPerms({photo_id,  is_public: 0, is_friend: 1, is_family: 0  })
   }
 
   //add the license
