@@ -2,6 +2,7 @@
 
 import fs from 'fs'
 import path from 'path'
+import { EOL } from 'os';
 import exiftool from 'node-exiftool'
 import uploadPhoto from "./__uploadPhoto.js";
 import getPhotoset from './getPhotosetID.js';
@@ -15,8 +16,6 @@ const albumInventoryFile = '' // 'inventory_PREVascularPlantTypes_20220904141326
 const batchSize = 10 //the number of images to upload per batch
 
 //SCRIPT
-
-process.env.NODE_NO_WARNINGS = 1 //to avoid the warnings about buffers from the flickr client
 
 //first read the directory and get all the relevant files
 console.log('reading file directory...')
@@ -102,6 +101,7 @@ console.log('starting file uploads...')
 let startIndex = 0
 let totalTime = 0
 let totalImages = 0
+const uploadErrors = []
 
 while (startIndex < toUpload.length){
   let images = toUpload.slice(startIndex, startIndex + batchSize)
@@ -124,7 +124,21 @@ while (startIndex < toUpload.length){
   }
 
   let time = process.hrtime()
-  await Promise.all(proms)
+  const results = await Promise.all(proms)
+
+  //if they're all errors then there's something wrong
+  //the errors would have been printed by uploadPhoto
+  if (results.every(x => x.result == 'error')) {
+    console.log('it appears something went wrong...')
+    process.exit()
+  }
+
+  //find any errors
+  for (const [index, result] of results.entries()) {
+    if(result.result == 'error') {
+      uploadErrors.push(images[index])
+    }
+  }
 
   time = process.hrtime(time)
   let seconds = time[0]
@@ -145,6 +159,15 @@ while (startIndex < toUpload.length){
 
   startIndex += batchSize
 
+}
+
+if(process.stdout.clearLine) {
+  process.stdout.write(EOL)
+}
+
+if (uploadErrors.length > 0) {
+  console.log('There were errors uploading the following files. Please check them on Flickr as they may have uploaded but might not have the right permissions or be included in the right album:')
+  console.log(uploadErrors.join('|'))
 }
 
 if (ep) {
