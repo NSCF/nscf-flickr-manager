@@ -30,7 +30,7 @@ const uploadPhoto = async (file, photoset_id, is_public, license_id = 4) => { //
     is_friend,
     is_family,
   })
-  
+
   let photo_id
   try {
     const response = await upload
@@ -44,12 +44,35 @@ const uploadPhoto = async (file, photoset_id, is_public, license_id = 4) => { //
     }
   }
 
+  let error = false
+  let errors = []
+
   //add the license
-  await flickr.photos.licenses.setLicense({ photo_id, license_id })
+  try {
+    await flickr.photos.licenses.setLicense({ photo_id, license_id })
+  }
+  catch(err) {
+    err = true
+    errors.push(err)
+  }
+  
 
   //and add it to the relevant album
-  await flickr.photosets.addPhoto({ photoset_id, photo_id })
+  try {
+    await flickr.photosets.addPhoto({ photoset_id, photo_id })
+  }
+  catch(err) {
+    err = true
+    errors.push(err)
+  }
 
+  if(error) {
+    return {
+      result: 'error',
+      error: errors
+    }
+  }
+  
   return {
     result: 'success'
   }
