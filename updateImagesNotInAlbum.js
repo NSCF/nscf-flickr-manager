@@ -1,3 +1,5 @@
+//somethings things go wrong with uploads and we have to fix them afterwards. This script does that...
+
 import flickr from "./flickrClient.js";
 import albumIndex from './albumIndex.js'
 import getPhotoset from './getPhotoset.js'

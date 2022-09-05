@@ -10,8 +10,13 @@ import getInventoryFromFlickr from './getAlbumInventory.js';
 
 //SETTINGS
 
+///where to get the images...
 const filePath = String.raw`C:\temp\Herbarium mass digitization project\ImageTaggingExperiments\JPEG`
 const filetype = '.jpg'
+const targetImagesFilePath = filePath
+const targetImagesFile = 'alltypes_20220905.txt'
+
+//where to load the images...
 const album = 'PRE Vascular Plant Types'
 let sensitiveTag = '' //TODO update this when we get sensitive taxa
 const albumInventoryFile = '' // 'inventory_PREVascularPlantTypes_20220904141326.json' //switched off for testing
@@ -27,6 +32,35 @@ files = files.filter(file => file.endsWith(filetype))
 if(files.length == 0) {
   console.log('No files found in', filePath, 'with extention', filetype)
   process.exit()
+}
+
+//if we have a targetImages file...
+if(targetImagesFilePath && targetImagesFile) {
+  const fullPath = path.join(targetImagesFilePath, targetImagesFile)
+  if(fs.existsSync(fullPath)) {
+    let file = fs.readFileSync(fullPath)
+    let filetext = file.toString()
+    let filenames = filetext.split(EOL)
+    if (filenames.length == 0) {
+      console.log(targetImagesFile, 'does not contain any data, please fix it or change the settings here...')
+      console.log('Exiting...')
+      process.exit()
+    }
+    else {
+      //filter target files using the files from the text file
+      files = files.filter(x => filenames.includes(x))
+      if (files.length == 0) {
+        console.log('There are no files in the directory that match file names in', targetImagesFile)
+        console.log('Exiting...')
+        process.exit()
+      }
+    }
+  }
+  else {
+    console.log(targetImagesFile, 'does not exist, please create it or fix the settings here...')
+    console.log('Exiting...')
+    process.exit()
+  }
 }
 
 //get the photoset details

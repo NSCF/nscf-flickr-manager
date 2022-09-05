@@ -1,9 +1,11 @@
 import flickr from "./flickrClient.js";
-import getInventoryFromFlickr from "./getInventory.js";
+import getInventoryFromFlickr from "./getAlbumInventory.js";
+
+const album = 'PRE Vascular Plant Types'
 
 
 console.log('Fetching inventory from Flickr...')
-let result = await getInventoryFromFlickr()
+let result = await getInventoryFromFlickr(album)
 
 //how many files are duplicated?
 const duplicated = []
@@ -15,6 +17,12 @@ for (let [key, value] of Object.entries(result)) {
 
   let theseForDeletion = value.slice(1)
   forDeletion = [...forDeletion, ...theseForDeletion]
+}
+
+if(duplicated.length == 0) {
+  console.log('There are no duplicated images in', album)
+  console.log('Bye...')
+  process.exit()
 }
 
 console.log('There are', duplicated.length, 'duplicated images')
