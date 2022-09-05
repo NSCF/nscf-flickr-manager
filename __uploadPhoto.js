@@ -19,7 +19,11 @@ const uploadPhoto = async (file, photoset_id, is_public, license_id = 4) => { //
     photo_id = response.body.photoid._content
   }
   catch(err) {
-    throw err
+    console.log(err)
+    return {
+      result: 'error',
+      error: err
+    }
   }
 
   if(is_public) {
@@ -35,7 +39,9 @@ const uploadPhoto = async (file, photoset_id, is_public, license_id = 4) => { //
   //and add it to the relevant album
   await flickr.photosets.addPhoto({ photoset_id, photo_id })
 
-  return
+  return {
+    result: 'success'
+  }
 
 }
 
