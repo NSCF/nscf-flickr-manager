@@ -84,7 +84,7 @@ if(typesOnly || (sensitiveTag && sensitiveTag.trim())) {
 //if not types filter out any that are not 
 const sensitiveIndex = new Set() //we need this because we don't want to read tags twice
 if(typesOnly){
-  console.log('Checking which images are of types or reference specimens...')
+  console.log('Checking which images are of types or reference specimens, this may take a few minutes...')
   const typeFiles = []
   for (const filename of files) {
     const file = path.join(filePath, filename)
