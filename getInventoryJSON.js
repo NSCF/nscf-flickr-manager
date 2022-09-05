@@ -4,6 +4,7 @@ import getInventoryFromFlickr from "./getAlbumInventory.js";
 let album = 'PRE Vascular Plant Types'
 console.log('Getting list of images from', album)
 let result = await getInventoryFromFlickr(album, true)
+console.log('There are', Object.keys(result).length, 'images in this album')
 
 const json = JSON.stringify(result)
 let now = new Date().toISOString()

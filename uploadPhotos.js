@@ -5,12 +5,19 @@ import path from 'path'
 import { EOL } from 'os';
 import exiftool from 'node-exiftool'
 import uploadPhoto from "./__uploadPhoto.js";
-import getPhotoset from './getPhotosetID.js';
+import getPhotoset from './getPhotoset.js';
 import getInventoryFromFlickr from './getAlbumInventory.js';
 
 const filePath = String.raw`G:\PRE\JPEG`
 const filetype = '.jpg'
-const album = 'PRE Vascular Plant Types'
+
+//do we want to upload images listed in a file (these will be filtered from the above filePath)
+const targetImagesFilePath = filePath
+const targetImagesFile = ''
+
+const typesOnly = true //types and reference specimens only? At the moment this should always be true
+const typeTags = ['type', 'reference'] //for working with typesOnly
+const album = 'PRE Vascular Plant Types' //where to load the images...
 let sensitiveTag = '' //TODO update this when we get sensitive taxa
 const albumInventoryFile = '' // 'inventory_PREVascularPlantTypes_20220904141326.json' //switched off for testing
 const batchSize = 50 //the number of images to upload per batch
@@ -26,6 +33,85 @@ if(files.length == 0) {
   console.log('No files found in', filePath, 'with extention', filetype)
   process.exit()
 }
+
+//if we have a targetImages file...
+if(targetImagesFilePath && targetImagesFile) {
+  const fullPath = path.join(targetImagesFilePath, targetImagesFile)
+  if(fs.existsSync(fullPath)) {
+    let file = fs.readFileSync(fullPath)
+    let filetext = file.toString()
+    let filenames = filetext.split(EOL)
+    if (filenames.length == 0) {
+      console.log(targetImagesFile, 'does not contain any data, please fix it or change the settings here...')
+      console.log('Exiting...')
+      process.exit()
+    }
+    else {
+      //filter target files using the files from the text file
+      files = files.filter(x => filenames.includes(x))
+      if (files.length == 0) {
+        console.log('There are no files in the directory that match file names in', targetImagesFile)
+        console.log('Exiting...')
+        process.exit()
+      }
+    }
+  }
+  else {
+    console.log(targetImagesFile, 'does not exist, please create it or fix the settings here...')
+    console.log('Exiting...')
+    process.exit()
+  }
+}
+
+//if we are only loading types or mark files as sensitive we need exiftool again
+let ep
+if(typesOnly || (sensitiveTag && sensitiveTag.trim())) {
+  console.log('starting exiftool...')
+  sensitiveTag = sensitiveTag.trim() //this is just cleaning
+  ep = new exiftool.ExiftoolProcess()
+  try {
+    await ep.open() //this takes sometime
+  }
+  catch(err) {
+    console.log('There was a problem starting exiftool, please make sure it is installed and available on your PATH')
+    process.exit()
+  }
+}
+
+//if not types filter out any that are not 
+const sensitiveIndex = new Set() //we need this because we don't want to read tags twice
+if(typesOnly){
+  console.log('Checking which images are of types or reference specimens, this may take a few minutes...')
+  const typeFiles = []
+  for (const filename of files) {
+    const file = path.join(filePath, filename)
+    let meta = await ep.readMetadata(file, ['subject'])
+    let fileKeywords = meta.data[0].Subject
+    
+    if (fileKeywords && fileKeywords.length > 0){
+      let hasTypeTags = fileKeywords.some(x => typeTags.includes(x))
+      if (hasTypeTags) {
+        typeFiles.push(filename)    
+      }
+
+      if (sensitiveTag in fileKeywords) {
+        sensitiveIndex.add(filename)
+      }
+    }
+        
+  }
+
+  if(typeFiles.length == 0) {
+    console.log('There are no images tagged as types/reference specimens in the image directory')
+    console.log('Exiting...')
+    process.exit()
+  }
+
+  files = typeFiles
+  console.log(files.length, "type specimen images will be uploaded")
+}
+
+//we now have the list of files to upload, and if we are tagging types only, we have a set of the sensitive species filenames
 
 //get the photoset details
 console.log('getting the album details...')
@@ -81,20 +167,7 @@ else {
   console.log('There are', toUpload.length, 'files to be uploaded...')
 }
 
-//if we need to mark files as sensitive we need exiftool again
-let ep
-if(sensitiveTag && sensitiveTag.trim()) {
-  console.log('starting exiftool...')
-  sensitiveTag = sensitiveTag.trim()
-  ep = new exiftool.ExiftoolProcess()
-  try {
-    await ep.open() //this takes sometime
-  }
-  catch(err) {
-    console.log('There was a problem starting exiftool, please make sure it is installed and available on your PATH')
-    process.exit()
-  }
-}
+
 
 //upload files ten at a time
 console.log('starting file uploads...')
@@ -111,10 +184,17 @@ while (startIndex < toUpload.length){
 
     let is_public = false //TODO update this when we get sensitive taxa...
     if(sensitiveTag) {
-      let meta = await ep.readMetadata(file, ['subject'])
-      let fileKeywords = meta.data[0].Subject
-      if(sensitiveTag in fileKeywords) {
-        is_public = false
+      if (!typesOnly) { //we created an index of sensitive images already if it is typesonly
+        let meta = await ep.readMetadata(file, ['subject'])
+        let fileKeywords = meta.data[0].Subject
+        if(sensitiveTag in fileKeywords) {
+          is_public = false
+        }
+      }
+      else {
+        if (sensitiveIndex.has(image)) {
+          is_public = false
+        }
       }
     }
 
@@ -166,7 +246,8 @@ if(process.stdout.clearLine) {
 }
 
 if (uploadErrors.length > 0) {
-  console.log('There were errors uploading the following files. Please check them on Flickr as they may have uploaded but might not have the right permissions or be included in the right album:')
+  console.log('There were errors uploading the following files. Please check them on Flickr as they may have uploaded but might not have the right permissions or be included in the right album.')
+  console.log('They can be updated automatically if they have appropriate tags using updateImagesNotInAlbum.js')
   console.log(uploadErrors.join('|'))
 }
 
