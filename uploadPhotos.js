@@ -7,16 +7,16 @@ import uploadPhoto from "./__uploadPhoto.js";
 import getPhotoset from './getPhotosetID.js';
 import getInventoryFromFlickr from './getAlbumInventory.js';
 
-const filePath = String.raw`C:\temp\Herbarium mass digitization project\ImageTaggingExperiments\JPEG`
+const filePath = String.raw`G:\PRE\JPEG`
 const filetype = '.jpg'
 const album = 'PRE Vascular Plant Types'
 let sensitiveTag = '' //TODO update this when we get sensitive taxa
 const albumInventoryFile = '' // 'inventory_PREVascularPlantTypes_20220904141326.json' //switched off for testing
-const batchSize = 10 //the number of images to upload per batch
+const batchSize = 50 //the number of images to upload per batch
 
 //SCRIPT
 
-process.env.NODE_NO_WARNINGS = 1 //to avoid the warnings about buffers from the flickr client
+//process.env.NODE_NO_WARNINGS = 1 //to avoid the warnings about buffers from the flickr client
 
 //first read the directory and get all the relevant files
 console.log('reading file directory...')
