@@ -2,7 +2,6 @@
 import flickr from './flickrClient.js'
 import getPhotoset from './getPhotoset.js'
 
-
 const getInventoryFromFlickr = async (albumTitle) => {
 
   let photoset_id
@@ -19,20 +18,8 @@ const getInventoryFromFlickr = async (albumTitle) => {
   let page = 1
   const list = {} //keys are image titles, values are arrays of flickr image IDs
   
-  let res = await flickr.photosets.getPhotos({ user_id: process.env.FLICKR_USERID, photoset_id, page })
-  for (const photo of res.body.photoset.photo) { //terrible property naming here...
-    if(list[photo.title]) {
-      list[photo.title].push(photo.id)
-    }
-    else {
-      list[photo.title] = [photo.id]
-    }
-  }
-
-  page++
-  
-  while (res.body.photoset.pages >= page) {
-    res = await flickr.photosets.getPhotos({ user_id: process.env.FLICKR_USERID, photoset_id, page })
+  do {
+    let res = await flickr.photosets.getPhotos({ user_id: process.env.FLICKR_USERID, photoset_id, page })
     for (const photo of res.body.photoset.photo) { //terrible property naming here...
       if(list[photo.title]) {
         list[photo.title].push(photo.id)
@@ -41,11 +28,13 @@ const getInventoryFromFlickr = async (albumTitle) => {
         list[photo.title] = [photo.id]
       }
     }
-  
+
     page++
-  }
+    
+  } while (page < res.body.photoset.pages)
 
   return list
+
 }
 
 export default getInventoryFromFlickr
